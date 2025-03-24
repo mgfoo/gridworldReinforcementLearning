@@ -1,21 +1,245 @@
-# Reinforcement_Learning
-In this project, I have implemented value iteration and Q-learning. The agents are being testnig on Gridworld
+# 🧠 Gridworld Reinforcement Learning Agents
 
-# Files + their description:
-- valueIterationAgents.py -> A value iteration agent for solving known MDPs. 
-- qlearningAgents.py -> Q-learning agents for Gridworld, Crawler and Pacman.
+This repository contains my completed implementations for solving various Markov Decision Processes (MDPs) in a Gridworld environment using **Value Iteration**, **Prioritized Sweeping**, and **Q-Learning**. Each component builds upon foundational reinforcement learning principles to plan or learn optimal policies through interaction or simulation.
 
-- mdp.py -> Defines methods on general MDPs. 
-- learningAgents.py -> Defines the base classes ValueEstimationAgent and QLearningAgent , which agents will extend. 
-- util.py -> Utilities, including util.Counter ,useful for Q- learners. 
-- gridworld.py -> The Gridworld implementation. 
+The grade I got from this project was 100%. 
 
-- environment.py -> Abstract class for general reinforcement learning environments. Used by gridworld.py . 
-- graphicsGridworldDisplay.py -> Gridworld graphical display. 
-- graphicsUtils.py -> Graphics utilities. 
-- textGridworldDisplay.py -> Plug-in for the Gridworld text interface. 
+---
 
-Please note that this project was completed for CMPT 310: Introduction to AI, taught by Professor Ahmadreza Nezami. 
+## 📁 File Structure
+
+| File | Description |
+|------|-------------|
+| `valueIterationAgents.py` | Implements value iteration and prioritized sweeping agents |
+| `qlearningAgents.py` | Implements the Q-learning agent |
+| `analysis.py` | Stores parameter analysis answers for questions 2, 3, 7 |
+| `gridworld.py` | GUI and environment for MDP-based agents |
+| `mdp.py` | MDP interface definition |
+| `util.py` | Utility functions (priority queue, Counter, flipCoin, etc.) |
+
+---
+
+Please note that this project was completed for CMPT 310: Introduction to AI, taught by Professor Ahmadreza Nezami. He had adapted the course material from Professor Dan Klein and Professor Pieter Abbeel for CS188 Intro to AI at UC Berkeley.
+
+---
+
+# Value Iteration Agent for Gridworld (Question 1)
+
+This project implements a **Value Iteration Agent** for solving Markov Decision Processes (MDPs) in the Gridworld environment using the **Value Iteration** algorithm.
+Implemented in `ValueIterationAgent` inside `valueIterationAgents.py`.
+
+This agent runs **batch value iteration** for a fixed number of iterations on an MDP, storing the computed state values in `self.values`. The agent then returns optimal actions and Q-values based on those values.
+
+## 🧠 What is Value Iteration?
+
+Value Iteration is a dynamic programming algorithm used to compute the optimal value function \( V^* \) and derive the optimal policy \( \pi^* \).
+
+The value update rule is:
+
+\[
+V_k(s) = \max_a \sum_{s'} P(s' | s, a) \left[ R(s, a, s') + \gamma V_{k-1}(s') \right]
+\]
+
+Each iteration improves the estimate of the value function by looking one step further into the future.
+
+## ✅ Implemented Methods
+
+### `__init__(self, mdp, discount, iterations)`
+- Initializes the agent and runs value iteration for the given number of iterations.
+- Stores results in `self.values`.
+
+### `computeQValueFromValues(self, state, action)`
+- Computes the Q-value of a `(state, action)` pair based on the current value function:
+
+\[
+Q(s, a) = \sum_{s'} P(s' | s, a) \left[ R(s, a, s') + \gamma V(s') \right]
+\]
+
+### `computeActionFromValues(self, state)`
+- Returns the best action in the given state according to the computed value function.
+- Uses `argmax_a Q(s, a)` to determine the optimal policy.
+- Returns `None` if the state has no legal actions (e.g., terminal state).
 
 
-Class description: A survey of modern approaches for artificial intelligence (AI). Provides an introduction to a variety of AI topics and prepares students for upper-level courses. Topics include: problem solving with search; adversarial game playing; probability and Bayesian networks; machine learning; and applications such as robotics, visual computing and natural language.
+
+
+## 🌉 BridgeGrid Analysis (Question 2)
+
+This section documents my completed implementation and analysis of agent behavior in the **BridgeGrid** environment — a special Gridworld map designed to test risk-aware planning.
+
+### 🗺️ Environment Features
+
+The BridgeGrid layout includes:
+
+- A **low-reward terminal state**
+- A **high-reward terminal state**
+- A **narrow bridge** separating the two exits
+- **High negative rewards** (chasms) on either side of the bridge
+
+The agent begins near the low-reward terminal state, and the default configuration encourages the agent to **avoid the bridge** due to the risk of falling into the chasm.
+
+---
+
+### 🧠 Completed Goal
+
+I successfully modified **one** MDP parameter to encourage the agent to **attempt to cross the bridge**, thereby preferring the high-reward terminal state. The two parameters available for tuning were:
+
+- `discount`: how much the agent values future rewards (`default: 0.9`)
+- `noise`: the likelihood of the agent ending up in an unintended state (`default: 0.2`)
+
+By changing only **one** of these parameters, I was able to influence the optimal policy generated by value iteration to favor crossing the bridge.
+
+## 🧮 DiscountGrid Analysis (Question 3)
+
+This section contains my completed solutions for tuning **MDP parameters** in the **DiscountGrid** environment to produce specific agent behaviors. I have implemented each solution by adjusting the following parameters:
+
+- `discount`: the agent's preference for future rewards
+- `noise`: the randomness of action outcomes (probability of unintended movement)
+- `living reward`: the reward received for each non-terminal step
+
+---
+
+### 🗺️ Environment Summary
+
+The **DiscountGrid** consists of:
+- Two positive terminal states:
+  - A **close exit** with reward **+1**
+  - A **distant exit** with reward **+10**
+- A bottom row of **cliff states** with reward **-10**
+- The agent starts in the yellow square
+
+I considered two main path strategies:
+- 🔴 **Cliff-risking paths**: shorter but with potential large negative rewards
+- 🟢 **Cliff-avoiding paths**: safer and longer, but may delay rewards
+
+### ✅ Behaviors Achieved
+
+| Function       | Desired Policy Behavior                                                 | Status         |
+|----------------|-------------------------------------------------------------------------|----------------|
+| `question3a()` | Prefer the close exit (+1), risking the cliff (-10)                     | ✅ Implemented |
+| `question3b()` | Prefer the close exit (+1), but avoiding the cliff (-10)                | ✅ Implemented |
+| `question3c()` | Prefer the distant exit (+10), risking the cliff (-10)                  | ✅ Implemented |
+| `question3d()` | Prefer the distant exit (+10), but avoiding the cliff (-10)             | ✅ Implemented |
+| `question3e()` | Avoid both exits and the cliff (never terminate)                        | ✅ Implemented |
+
+## ⚡ Question 4: Prioritized Sweeping Value Iteration 
+
+In this question, I implemented the `PrioritizedSweepingValueIterationAgent` class in `valueIterationAgents.py`.
+
+This agent improves upon standard value iteration by focusing updates on states that are **most likely to lead to policy changes**, using a **priority queue** based on value difference.
+
+---
+
+### 🧠 Algorithm Overview
+
+The prioritized sweeping algorithm proceeds as follows:
+
+1. **Compute predecessors** of all states:  
+   - A predecessor of a state `s` is any state `p` from which it is possible to reach `s` with non-zero probability.
+   - Stored in a `set` to avoid duplicates.
+
+2. **Initialize the priority queue**:
+   - For each non-terminal state `s`:
+     - Calculate `diff = abs(current value - max Q-value)`
+     - Push `s` into the priority queue with priority `-diff` (negative because `util.PriorityQueue` is a min-heap)
+
+3. **Iterate for `self.iterations` steps**:
+   - Pop the state `s` with the highest priority (largest error).
+   - Update the value of `s` if it’s not a terminal state.
+   - For each predecessor `p` of `s`:
+     - Recalculate `diff = abs(current value - max Q-value)`
+     - If `diff > theta`, push `p` into the queue **only if** it's not already in the queue with a lower or equal priority.
+
+---
+## 🤖 Question 5: Q-Learning Agent 
+
+In this question, I implemented the `QLearningAgent` class in `qlearningAgents.py`, a **model-free reinforcement learning agent** that learns optimal policies by interacting with the environment and updating its knowledge of state-action values.
+
+Unlike the value iteration agent, which plans using a known MDP model, the Q-learning agent **learns from experience** using the **Q-learning update rule**.
+
+---
+
+### 🧠 Q-Learning Overview
+
+Q-Learning is an off-policy temporal difference (TD) learning algorithm that updates Q-values as follows:
+
+\[
+Q(s, a) \leftarrow Q(s, a) + \alpha \left[ r + \gamma \max_{a'} Q(s', a') - Q(s, a) \right]
+\]
+
+Where:
+- \( \alpha \): learning rate
+- \( \gamma \): discount factor
+- \( r \): reward received
+- \( s' \): resulting state
+- \( a' \): next possible actions
+
+---
+
+### ✅ Methods Implemented
+
+| Method | Description |
+|--------|-------------|
+| `getQValue(state, action)` | Returns the current Q-value (defaults to 0 if unseen) |
+| `computeValueFromQValues(state)` | Returns max Q-value over legal actions in a state |
+| `computeActionFromQValues(state)` | Returns the action with the highest Q-value (random tie-breaking) |
+| `update(state, action, nextState, reward)` | Performs the Q-learning update for a given transition |
+
+---
+
+### 🔧 Key Features
+
+- Maintains a dictionary of Q-values (`self.qValues`)
+- Handles unseen `(state, action)` pairs with a default value of `0.0`
+- Implements **random tie-breaking** using `random.choice()` when multiple actions have the same maximum Q-value
+- Follows proper abstraction: all Q-value access is done via `getQValue()`, ensuring compatibility with feature-based extensions in later questions
+
+---
+
+## 🎲 Question 6: Epsilon-Greedy Exploration 
+
+In this question, I extended the Q-learning agent by implementing **epsilon-greedy exploration** in the `getAction` method of `QLearningAgent` (located in `qlearningAgents.py`).
+
+This strategy allows the agent to balance **exploration** (trying new actions) with **exploitation** (choosing the best-known action).
+
+---
+
+### 🎯 Epsilon-Greedy Strategy
+
+The agent follows this policy when selecting actions:
+- With probability **ε (epsilon)**: choose a **random** legal action (exploration)
+- With probability **1 - ε**: choose the **best** action based on current Q-values (exploitation)
+
+This encourages the agent to explore the environment during training, helping avoid suboptimal local minima.
+
+---
+
+### ✅ Method Implemented
+
+| Method | Description |
+|--------|-------------|
+| `getAction(state)` | Returns an action chosen using the epsilon-greedy policy |
+
+### 🛠️ Implementation Notes
+
+- Used `util.flipCoin(epsilon)` to determine whether to explore or exploit
+- Used `random.choice(legalActions)` to randomly select an action when exploring
+- Ensured that **all legal actions** are eligible during exploration (not just suboptimal ones)
+- If no legal actions are available (e.g., terminal state), the method returns `None`
+
+---
+
+## 🌉 Question 7: Bridge Crossing Revisited
+
+In this question, I analyzed the learning behavior of a **Q-learning agent** on the **BridgeGrid** environment and determined whether it's possible to learn the **optimal bridge-crossing policy** within 50 episodes using specific epsilon and learning rate settings.
+
+---
+
+### 🧠 Objective
+
+The task was to evaluate whether a Q-learner can reliably (≥99% probability) learn the **optimal policy** in a **noiseless BridgeGrid environment** within a short number of training episodes (50), using appropriate exploration and learning parameters.
+
+---
+
+
+
